@@ -1,0 +1,168 @@
+<p align="center">
+  <img src="assets/hero-preview.png" alt="AI Mind Map Generator" width="800"/>
+</p>
+
+<h1 align="center">🧠 AI Mind Map Generator</h1>
+
+<p align="center">
+  <strong>An interactive, AI-powered knowledge graph explorer built with React Flow + Ollama</strong>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white" />
+  <img src="https://img.shields.io/badge/Vite-7-646CFF?logo=vite&logoColor=white" />
+  <img src="https://img.shields.io/badge/React_Flow-11-FF0072?logo=reactflow&logoColor=white" />
+  <img src="https://img.shields.io/badge/Dagre-Layout-orange" />
+  <img src="https://img.shields.io/badge/Ollama-LLM-green?logo=ollama" />
+</p>
+
+---
+
+## ✨ Overview
+
+**AI Mind Map Generator** transforms any topic into a beautiful, interactive hierarchical knowledge map. Type in a subject — *Physics*, *Machine Learning*, *Web Architecture* — and the AI instantly generates a structured, multi-level mind map that you can explore, expand, collapse, and organize.
+
+The system uses a **local LLM** (via Ollama) to recursively generate structured knowledge, and renders it as an infinite-canvas graph with smooth animations, focus modes, and context menus.
+
+---
+
+## 🎯 Key Features
+
+| Feature | Description |
+|---|---|
+| **🤖 AI-Powered Generation** | Instantly generates multi-level knowledge trees from any topic using Ollama LLM |
+| **🌳 Hierarchical Layout** | Clean Left-to-Right tree layout powered by Dagre with automatic parent centering |
+| **🔄 Expand & Collapse** | Click to reveal or hide branches with smooth CSS-animated transitions |
+| **📷 Smart Camera** | Auto-frames parent + children when expanding; zooms to fit the active branch |
+| **🔍 Focus Mode** | Click any node to highlight its ancestry path while dimming unrelated branches |
+| **📋 Context Menu** | Right-click nodes to expand, edit labels, explain, or delete entire branches |
+| **💾 Persistent Memory** | Graph state auto-saves to localStorage and cleanly restores on refresh |
+| **🎨 Glassmorphism UI** | Premium dark theme with animated edges, glow effects, and hover tooltips |
+| **🫥 Auto-Hide Header** | Search bar slides away during graph interaction; reappears on top-edge hover |
+
+---
+
+## 🏗️ Architecture
+
+```
+ai-graph-system/
+├── src/
+│   ├── App.jsx              # Main application — state management, graph logic, UI
+│   ├── App.css              # Complete design system — glassmorphism, animations, focus mode
+│   ├── layoutEngine.js      # Dagre-powered horizontal tree layout with visibility-aware positioning
+│   ├── llmService.js        # Ollama LLM integration — structured JSON prompts for knowledge generation
+│   ├── components/
+│   │   └── CustomNode.jsx   # Custom React Flow node — handles, labels, toggle/expand buttons
+│   ├── main.jsx             # React entry point with ReactFlowProvider
+│   └── index.css            # Base styles
+├── assets/
+│   └── hero-preview.png     # Project preview image
+├── package.json
+└── vite.config.js
+```
+
+### Core Modules
+
+| Module | Responsibility |
+|---|---|
+| `App.jsx` | Orchestrates the graph state, collapse/expand logic, context menus, focus mode, camera framing, and localStorage persistence |
+| `layoutEngine.js` | Wraps Dagre's hierarchical layout algorithm. Filters visible nodes, computes positions, and snaps hidden nodes to their nearest visible ancestor for smooth animations |
+| `llmService.js` | Sends structured prompts to Ollama's local API. Generates Root → Level 1 → Level 2 knowledge hierarchies in a single request, with recursive expansion support |
+| `CustomNode.jsx` | Renders interactive node cards with expand (➕) / collapse (▶/▼) buttons, hover descriptions, and left/right connection handles |
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- **Node.js** ≥ 18
+- **Ollama** running locally with a model installed
+
+```bash
+# Install and start Ollama (if not already)
+# https://ollama.com/download
+ollama pull llama3.2
+ollama serve
+```
+
+### Installation
+
+```bash
+# Clone the repository
+git clone https://github.com/Adiptify/AI_Mind_Map_Generator.git
+cd AI_Mind_Map_Generator
+
+# Install dependencies
+npm install
+
+# Start the development server
+npm run dev
+```
+
+The app will be available at **http://localhost:5173**
+
+---
+
+## 🎮 Usage
+
+1. **Search** — Type any topic (e.g., *"Quantum Computing"*) in the top search bar and press Enter
+2. **Explore** — Click the **▶** chevron on any node to reveal/hide its children
+3. **Expand** — Click the **➕** button on leaf nodes to generate deeper sub-topics via AI
+4. **Focus** — Click any node to highlight its full ancestry path
+5. **Organize** — Drag nodes freely; click **Auto Layout** to re-arrange
+6. **Context Menu** — Right-click any node for options: Expand, Edit, Explain, Delete
+7. **Clear** — Use the trash icon to reset the entire graph
+
+---
+
+## ⚙️ Configuration
+
+### LLM Model
+
+Edit `src/llmService.js` to change the Ollama model:
+
+```javascript
+// Default model
+const response = await ollama.chat({
+  model: 'llama3.2', // Change to any installed Ollama model
+  ...
+});
+```
+
+### Layout Tuning
+
+Edit `src/layoutEngine.js` to adjust spacing:
+
+```javascript
+dagreGraph.setGraph({
+  rankdir: 'LR',     // 'LR' = Left-to-Right, 'TB' = Top-to-Bottom
+  ranksep: 200,       // Horizontal gap between parent and child
+  nodesep: 120,       // Vertical gap between sibling nodes
+});
+```
+
+---
+
+## 🛠️ Tech Stack
+
+| Technology | Purpose |
+|---|---|
+| [React 19](https://react.dev) | UI framework |
+| [React Flow 11](https://reactflow.dev) | Infinite canvas graph rendering |
+| [Dagre](https://github.com/dagrejs/dagre) | Hierarchical graph layout algorithm |
+| [Ollama](https://ollama.com) | Local LLM inference |
+| [Lucide React](https://lucide.dev) | Icon system |
+| [Vite 7](https://vite.dev) | Build tool & dev server |
+
+---
+
+## 📄 License
+
+This project is part of the **Adiptify** platform ecosystem.
+
+---
+
+<p align="center">
+  Built with ❤️ by <a href="https://github.com/Adiptify">Adiptify</a>
+</p>
