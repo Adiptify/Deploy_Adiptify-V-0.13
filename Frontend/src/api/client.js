@@ -24,7 +24,8 @@ export async function apiFetch(endpoint, options = {}) {
 
     const response = await fetch(`${API_BASE}${endpoint}`, config);
 
-    if (response.status === 401) {
+    // If it's a 401, but not from the login endpoint, treat as session expiration
+    if (response.status === 401 && !endpoint.includes('/api/auth/login')) {
         localStorage.removeItem('adiptify_token');
         localStorage.removeItem('adiptify_user');
         window.location.hash = '#/login';
