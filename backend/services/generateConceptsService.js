@@ -54,15 +54,36 @@ function conceptGeneratorUser(subjectName, topicTitle, topicDescription, learnin
  */
 function parseJsonSafe(text) {
     let cleaned = text.trim();
+    try {
+        return JSON.parse(cleaned);
+    } catch (e) {}
+
     if (cleaned.startsWith("```")) {
-        cleaned = cleaned.replace(/^```(?:json)?\s*\n?/, "").replace(/\n?```\s*$/, "");
+        let noMd = cleaned.replace(/^```(?:json)?\s*\n?/, "").replace(/\n?```\s*$/, "");
+        try { return JSON.parse(noMd); } catch (e) {}
     }
-    // Try to extract JSON from thinking models that include reasoning
-    const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-        cleaned = jsonMatch[0];
+
+    const mdMatch = cleaned.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+    if (mdMatch && mdMatch[1]) {
+        try { return JSON.parse(mdMatch[1].trim()); } catch (e) {}
     }
-    return JSON.parse(cleaned);
+    
+    const objMatch = cleaned.match(/\{[\s\S]*\}/);
+    const arrMatch = cleaned.match(/\[[\s\S]*\]/);
+    
+    let objStr = objMatch ? objMatch[0] : null;
+    let arrStr = arrMatch ? arrMatch[0] : null;
+    
+    if (objStr && arrStr) {
+        const target = objStr.length > arrStr.length ? objStr : arrStr;
+        try { return JSON.parse(target); } catch (e) {}
+    } else if (objStr) {
+        try { return JSON.parse(objStr); } catch (e) {}
+    } else if (arrStr) {
+        try { return JSON.parse(arrStr); } catch (e) {}
+    }
+    
+    throw new Error("Could not extract valid JSON from response.");
 }
 
 /**
@@ -75,25 +96,35 @@ async function generateConceptsForTopic(subjectName, topic, learningOutcomes) {
 
     const ollama = new Ollama({ host: ollamaBase });
 
-    try {
-        const response = await ollama.chat({
-            model: config.ollamaModel || "llama3",
-            messages: [
-                { role: "system", content: CONCEPT_GENERATOR_SYSTEM },
-                { role: "user", content: conceptGeneratorUser(subjectName, topic.title || topic, topic.description || "", learningOutcomes, topic.moduleName) },
-            ],
-            stream: false,
-            format: "json",
-        });
+    let systemPrompt = CONCEPT_GENERATOR_SYSTEM;
+    let userPrompt = conceptGeneratorUser(subjectName, topic.title || topic, topic.description || "", learningOutcomes, topic.moduleName);
 
-        const raw = response.message?.content || "";
-        const parsed = parseJsonSafe(raw);
-        return parsed.concepts || [];
-    } catch (err) {
-        console.error(`[GenerateConcepts] Ollama failed for topic "${topic.title || topic}":`, err.message);
-        // Return fallback concepts so the system still works without AI
-        return generateFallbackConcepts(subjectName, topic);
+    let lastError;
+    for (let attempt = 1; attempt <= 3; attempt++) {
+        try {
+            const response = await ollama.chat({
+                model: config.ollamaModel || "llama3",
+                messages: [
+                    { role: "system", content: systemPrompt },
+                    { role: "user", content: userPrompt },
+                ],
+                stream: false,
+                format: "json",
+            });
+
+            const raw = response.message?.content || "";
+            const parsed = parseJsonSafe(raw);
+            return parsed.concepts || [];
+        } catch (err) {
+            lastError = err;
+            console.warn(`[GenerateConcepts] Attempt ${attempt} failed for topic "${topic.title || topic}":`, err.message);
+            userPrompt += `\n\nCRITICAL FEEDBACK ON PREVIOUS ATTEMPT:\nYour previous response failed to parse as valid JSON. Error: ${err.message}. Please strictly output ONLY valid JSON without any markdown formatting or preamble.`;
+        }
     }
+
+    console.error(`[GenerateConcepts] Ollama failed after 3 attempts for topic "${topic.title || topic}":`, lastError.message);
+    // Return fallback concepts so the system still works without AI
+    return generateFallbackConcepts(subjectName, topic);
 }
 
 /**

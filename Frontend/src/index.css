@@ -1,13 +1,16 @@
 @import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap');
 
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
   --color-adiptify-navy: #2D3C59;
+  --color-adiptify-navy-deep: #1E2A3F;
   --color-adiptify-olive: #94A378;
   --color-adiptify-gold: #E5BA41;
   --color-adiptify-terracotta: #D1855C;
-  --font-sans: 'Inter', 'Outfit', sans-serif;
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
 }
 
 /* ─── Light mode defaults ─── */
@@ -50,77 +53,79 @@ body {
   overflow-x: hidden;
   font-family: var(--font-sans);
   transition: background-color 0.2s ease, color 0.2s ease;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-.mountain-graph-path {
-  transition: d 0.5s ease-in-out;
-}
-
-/* Custom Scrollbar for Chat */
+/* ─── Custom Scrollbar — thin, branded ─── */
 .custom-scrollbar::-webkit-scrollbar {
-  width: 6px;
+  width: 5px;
 }
-
 .custom-scrollbar::-webkit-scrollbar-track {
-  background-color: #f1f5f9;
+  background-color: transparent;
 }
-
-.dark .custom-scrollbar::-webkit-scrollbar-track {
-  background-color: #1e293b;
-}
-
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background-color: rgba(45, 60, 89, 0.2);
+  background-color: rgba(45, 60, 89, 0.15);
   border-radius: 9999px;
 }
-
 .dark .custom-scrollbar::-webkit-scrollbar-thumb {
-  background-color: rgba(148, 163, 184, 0.3);
+  background-color: rgba(148, 163, 184, 0.2);
 }
-
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(45, 60, 89, 0.4);
+  background-color: rgba(45, 60, 89, 0.3);
 }
-
 .dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(148, 163, 184, 0.5);
+  background-color: rgba(148, 163, 184, 0.35);
 }
 
-/* Fade-in animation for page transitions */
+/* ─── Fade-in animation for page transitions ─── */
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
-
 .animate-fadeIn {
   animation: fadeIn 0.35s ease-out;
 }
 
-/* Pulse glow for active cards */
+/* ─── Pulse glow for active cards ─── */
 @keyframes pulseGlow {
-
-  0%,
-  100% {
-    box-shadow: 0 0 0 0 rgba(229, 186, 65, 0);
-  }
-
-  50% {
-    box-shadow: 0 0 12px 2px var(--glow-color, rgba(229, 186, 65, 0.15));
-  }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(229, 186, 65, 0); }
+  50%      { box-shadow: 0 0 12px 2px var(--glow-color, rgba(229, 186, 65, 0.15)); }
 }
-
 .animate-pulseGlow {
   animation: pulseGlow 2s ease-in-out infinite;
 }
 
-/* Theme transition for smooth switching */
+/* ─── Shimmer loading effect ─── */
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.animate-shimmer {
+  background: linear-gradient(90deg, transparent 25%, rgba(229, 186, 65, 0.08) 50%, transparent 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* ─── Float animation for hero elements ─── */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50%      { transform: translateY(-10px); }
+}
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* ─── Gradient border glow ─── */
+@keyframes borderGlow {
+  0%, 100% { border-color: rgba(229, 186, 65, 0.2); }
+  50%      { border-color: rgba(229, 186, 65, 0.5); }
+}
+.animate-borderGlow {
+  animation: borderGlow 3s ease-in-out infinite;
+}
+
+/* ─── Theme transition for smooth switching ─── */
 *,
 *::before,
 *::after {
@@ -131,4 +136,68 @@ body {
 .react-flow *,
 .graph-container * {
   transition: none !important;
+}
+
+/* ─── SVG Mountain path smooth transitions ─── */
+.mountain-graph-path {
+  transition: d 0.5s ease-in-out;
+}
+
+/* ─── Card hover lift effect ─── */
+.card-hover-lift {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.card-hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1),
+              0 4px 10px -5px rgba(0, 0, 0, 0.06);
+}
+.dark .card-hover-lift:hover {
+  box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.4),
+              0 4px 10px -5px rgba(0, 0, 0, 0.3);
+}
+
+/* ─── Glass morphism utility ─── */
+.glass {
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+.dark .glass {
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* ─── Focus ring for accessibility ─── */
+*:focus-visible {
+  outline: 2px solid var(--color-gold);
+  outline-offset: 2px;
+}
+
+/* ─── Gradient text utility ─── */
+.gradient-text-brand {
+  background: linear-gradient(135deg, var(--color-navy), var(--color-terracotta));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.dark .gradient-text-brand {
+  background: linear-gradient(135deg, var(--color-gold), var(--color-terracotta));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ─── Select / input appearance reset for dark mode ─── */
+select, input[type="text"], input[type="email"], input[type="password"], input[type="number"], textarea {
+  color-scheme: light;
+}
+.dark select, .dark input[type="text"], .dark input[type="email"], .dark input[type="password"], .dark input[type="number"], .dark textarea {
+  color-scheme: dark;
+}
+
+/* ─── Range slider branded accent ─── */
+input[type="range"] {
+  accent-color: var(--color-gold);
 }

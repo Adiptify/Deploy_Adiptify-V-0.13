@@ -1,0 +1,56 @@
+# ═══════════════════════════════════════════════════════════
+# Adiptify — Deploy to Azure App Service
+# This workflow builds the frontend, then deploys the entire
+# project to Azure App Service (Linux Node.js)
+# ═══════════════════════════════════════════════════════════
+
+name: Deploy to Azure App Service
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+env:
+  AZURE_WEBAPP_NAME: adiptify           # Change to your App Service name
+  NODE_VERSION: '20.x'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # ─── Build Frontend ───
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install frontend dependencies
+        working-directory: ./Frontend
+        run: npm ci
+
+      - name: Build frontend
+        working-directory: ./Frontend
+        run: npm run build
+        env:
+          VITE_API_BASE_URL: ''  # Empty = same origin (backend serves frontend)
+
+      # ─── Prepare Backend ───
+      - name: Install backend dependencies
+        working-directory: ./backend
+        run: npm ci --production
+
+      # ─── Deploy to Azure ───
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ env.AZURE_WEBAPP_NAME }}
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          package: .
+
+      - name: Deployment complete
+        run: echo "✅ Adiptify deployed to https://${{ env.AZURE_WEBAPP_NAME }}.azurewebsites.net"

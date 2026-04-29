@@ -65,13 +65,29 @@ function ConceptCard({ concept, progress, onClick, colorIndex }) {
             </div>
 
             {/* Pipeline progress bar */}
-            <div className="flex gap-1">
+            <div className="flex gap-1 mb-4">
                 {stages.map((s, i) => (
                     <div key={s} className="flex-1 flex flex-col items-center gap-0.5">
                         <div className={`w-full h-1.5 rounded-full transition-colors ${i <= stage ? 'bg-adiptify-gold' : 'bg-slate-100 dark:bg-slate-700'}`} />
                         <span className="text-[8px] text-slate-400 dark:text-slate-500">{s}</span>
                     </div>
                 ))}
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex gap-2 relative z-10" onClick={e => e.stopPropagation()}>
+                <button
+                    onClick={(e) => { e.preventDefault(); /* Logic to start quiz */ }}
+                    className="flex-1 px-3 py-2 bg-adiptify-gold text-adiptify-navy font-semibold text-xs rounded-xl hover:bg-adiptify-gold/90 transition-all active:scale-[0.98]"
+                >
+                    Start Quiz
+                </button>
+                <button
+                    onClick={(e) => { e.preventDefault(); /* Logic to mark complete */ }}
+                    className="flex-1 px-3 py-2 bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold text-xs rounded-xl border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-600 transition-all active:scale-[0.98]"
+                >
+                    Mark Complete
+                </button>
             </div>
 
             <ChevronRight size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 dark:text-slate-600 group-hover:text-adiptify-gold group-hover:translate-x-1 transition-all" />
@@ -92,7 +108,7 @@ function NoSubjectsState() {
                 Enroll in subjects from the Subject Explorer to unlock AI-powered study modules, spaced review, and analytics.
             </p>
             <button
-                onClick={() => navigate('/subjects')}
+                onClick={() => navigate('/catalog')}
                 className="px-6 py-2.5 rounded-xl bg-adiptify-navy dark:bg-slate-700 text-white font-medium text-sm hover:bg-slate-700 dark:hover:bg-slate-600 transition-colors"
             >
                 Browse Subjects
@@ -139,6 +155,7 @@ export default function StudyModules() {
     const navigate = useNavigate();
     const [filter, setFilter] = useState('all');
     const [search, setSearch] = useState('');
+    const [studyMode, setStudyMode] = useState('quick'); // quick, exam, deep
 
     // Build category list from actual concepts (subjects)
     const categories = useMemo(() => {
@@ -255,6 +272,23 @@ export default function StudyModules() {
                         onChange={e => setSearch(e.target.value)}
                         className="text-xs px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 outline-none focus:border-adiptify-gold/50 focus:ring-2 focus:ring-adiptify-gold/10 transition w-52"
                     />
+                    
+                    {/* Mode Switch */}
+                    <div className="flex bg-slate-200/50 dark:bg-slate-800 p-1 rounded-xl">
+                        {['quick', 'exam', 'deep'].map(mode => (
+                            <button
+                                key={mode}
+                                onClick={() => setStudyMode(mode)}
+                                className={`px-4 py-1.5 text-xs font-medium rounded-lg capitalize transition-all ${
+                                    studyMode === mode
+                                        ? 'bg-white dark:bg-slate-700 text-adiptify-navy dark:text-white shadow-sm'
+                                        : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+                                }`}
+                            >
+                                {mode}
+                            </button>
+                        ))}
+                    </div>
                 </div>
             </header>
 

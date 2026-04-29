@@ -91,7 +91,7 @@ export default function SpacedReview() {
                     </div>
                     <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-2">No Subjects Enrolled</h2>
                     <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">Enroll in subjects and generate study modules to start spaced review.</p>
-                    <button onClick={() => navigate('/subjects')} className="px-6 py-2.5 rounded-xl bg-adiptify-navy dark:bg-slate-700 text-white font-medium text-sm hover:bg-slate-700 transition-colors">
+                    <button onClick={() => navigate('/catalog')} className="px-6 py-2.5 rounded-xl bg-adiptify-navy dark:bg-slate-700 text-white font-medium text-sm hover:bg-slate-700 transition-colors">
                         Browse Subjects
                     </button>
                 </div>
@@ -109,7 +109,7 @@ export default function SpacedReview() {
                     </div>
                     <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-2">Generate Study Modules First</h2>
                     <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">Head to Study Modules to generate AI content, then come back for spaced review.</p>
-                    <button onClick={() => navigate('/study-modules')} className="px-6 py-2.5 rounded-xl bg-purple-500 text-white font-medium text-sm hover:bg-purple-600 transition-colors flex items-center gap-2 mx-auto">
+                    <button onClick={() => navigate('/modules')} className="px-6 py-2.5 rounded-xl bg-purple-500 text-white font-medium text-sm hover:bg-purple-600 transition-colors flex items-center gap-2 mx-auto">
                         <BookOpen size={16} /> Go to Study Modules
                     </button>
                 </div>
@@ -130,7 +130,7 @@ export default function SpacedReview() {
                         No concepts are due for review right now. Keep studying to add more cards!
                     </p>
                     <div className="flex gap-3 justify-center">
-                        <button onClick={() => navigate('/study-modules')} className="px-5 py-2.5 rounded-xl bg-adiptify-navy dark:bg-slate-700 text-white font-medium text-sm hover:bg-slate-700 transition-colors flex items-center gap-2">
+                        <button onClick={() => navigate('/modules')} className="px-5 py-2.5 rounded-xl bg-adiptify-navy dark:bg-slate-700 text-white font-medium text-sm hover:bg-slate-700 transition-colors flex items-center gap-2">
                             <BookOpen size={16} /> Study More
                         </button>
                     </div>
@@ -166,7 +166,7 @@ export default function SpacedReview() {
                         <button onClick={resetSession} className="px-6 py-2.5 rounded-xl bg-adiptify-navy dark:bg-slate-700 text-white font-medium text-sm hover:bg-slate-700 dark:hover:bg-slate-600 transition-colors flex items-center gap-2">
                             <RefreshCw size={16} /> Review Again
                         </button>
-                        <button onClick={() => navigate('/study-modules')} className="px-6 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-medium text-sm hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors flex items-center gap-2">
+                        <button onClick={() => navigate('/modules')} className="px-6 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-medium text-sm hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors flex items-center gap-2">
                             <BookOpen size={16} /> Study More
                         </button>
                     </div>

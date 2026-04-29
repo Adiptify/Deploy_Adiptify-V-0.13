@@ -1,11 +1,11 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQuiz } from '../../context/QuizContext';
-import { Bot, X, Send, Loader2, Network, Brain, ChevronDown, ChevronRight, StopCircle, Sparkles } from 'lucide-react';
+import { Bot, X, Send, Loader2, Brain, ChevronDown, ChevronRight, StopCircle, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { apiFetch } from '../../api/client';
 
-const API_BASE = 'http://localhost:4000';
+const API_BASE = import.meta.env.VITE_API_BASE_URL || '';
 
 // Simple inline markdown for chat bubbles
 function renderInline(text) {
@@ -14,11 +14,11 @@ function renderInline(text) {
     return lines.map((line, i) => {
         // Code block fence — skip
         if (line.trim().startsWith('```')) return null;
-        // Bold
+        // Bold + code spans
         const parts = line.split(/(\*\*[^*]+\*\*|`[^`]+`)/g);
         const rendered = parts.map((p, j) => {
             if (p.startsWith('**') && p.endsWith('**')) return <strong key={j} className="font-semibold">{p.slice(2, -2)}</strong>;
-            if (p.startsWith('`') && p.endsWith('`')) return <code key={j} className="bg-slate-100 dark:bg-slate-600 px-1 rounded text-[11px] font-mono text-pink-600 dark:text-pink-300">{p.slice(1, -1)}</code>;
+            if (p.startsWith('`') && p.endsWith('`')) return <code key={j} className="bg-adiptify-navy/10 dark:bg-adiptify-gold/10 px-1 rounded text-[11px] font-mono text-adiptify-terracotta dark:text-adiptify-gold">{p.slice(1, -1)}</code>;
             return p;
         });
         return <React.Fragment key={i}>{rendered}{i < lines.length - 1 && <br />}</React.Fragment>;
@@ -183,11 +183,11 @@ const AITutor = () => {
                 >
                     <button
                         onClick={() => setIsOpen(true)}
-                        className="w-14 h-14 rounded-full bg-adiptify-navy dark:bg-adiptify-gold text-white dark:text-slate-900 shadow-xl hover:shadow-2xl flex items-center justify-center transition-all relative"
+                        className="w-14 h-14 rounded-full bg-gradient-to-br from-adiptify-navy to-[#1e2d45] dark:from-adiptify-gold dark:to-adiptify-terracotta text-white dark:text-adiptify-navy shadow-xl hover:shadow-2xl flex items-center justify-center transition-all relative group"
                     >
-                        <Bot size={24} />
+                        <img src="/favicon.png" alt="Adiptify AI" className="w-8 h-8 object-contain drop-shadow-md group-hover:scale-110 transition-transform" />
                         {/* Status dot */}
-                        <span className={`absolute top-1 right-1 w-3 h-3 rounded-full border-2 border-white dark:border-slate-900 ${ollamaStatus === 'connected' ? 'bg-emerald-500' : 'bg-red-500'}`} />
+                        <span className={`absolute top-1 right-1 w-3 h-3 rounded-full border-2 border-white dark:border-slate-900 ${ollamaStatus === 'connected' ? 'bg-adiptify-olive' : 'bg-adiptify-terracotta'}`} />
                     </button>
                 </motion.div>
             )}
@@ -199,20 +199,21 @@ const AITutor = () => {
                         initial={{ opacity: 0, y: 100, scale: 0.9 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 100, scale: 0.9 }}
-                        className="fixed bottom-5 right-5 z-[60] w-[380px] max-w-[92vw]"
+                        transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                        className="fixed bottom-5 right-5 z-[60] w-[400px] max-w-[92vw]"
                     >
-                        <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 overflow-hidden flex flex-col h-[520px]">
-                            {/* Header */}
-                            <div className="bg-adiptify-navy dark:bg-slate-900 text-white px-4 py-3 flex items-center justify-between flex-shrink-0">
-                                <div className="flex items-center gap-2.5">
-                                    <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
-                                        <Bot size={18} />
+                        <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200/80 dark:border-slate-700/60 overflow-hidden flex flex-col h-[540px]">
+                            {/* Header — Adiptify branded */}
+                            <div className="bg-gradient-to-r from-adiptify-navy to-[#1e2d45] dark:from-slate-900 dark:to-slate-800 text-white px-5 py-3.5 flex items-center justify-between flex-shrink-0">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-9 h-9 flex items-center justify-center">
+                                        <img src="/favicon.png" alt="Adiptify" className="w-8 h-8 object-contain drop-shadow-md" />
                                     </div>
                                     <div>
                                         <p className="text-sm font-bold leading-tight">AI Study Tutor</p>
                                         <p className="text-[10px] text-white/50 flex items-center gap-1">
-                                            <Sparkles size={8} />
-                                            {ollamaStatus === 'connected' ? `${ollamaModel} · Streaming` : 'Offline'}
+                                            <span className={`w-1.5 h-1.5 rounded-full ${ollamaStatus === 'connected' ? 'bg-adiptify-olive animate-pulse' : 'bg-adiptify-terracotta'}`} />
+                                            {ollamaStatus === 'connected' ? `${ollamaModel} · Online` : 'Offline'}
                                         </p>
                                     </div>
                                 </div>
@@ -228,13 +229,19 @@ const AITutor = () => {
                             </div>
 
                             {/* Messages */}
-                            <div className="flex-1 overflow-y-auto p-3 space-y-3 bg-slate-50 dark:bg-slate-900 custom-scrollbar">
+                            <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-slate-50 dark:bg-slate-950 custom-scrollbar">
                                 {messages.map((m, i) => (
-                                    <div key={i} className={`flex ${m.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
+                                    <motion.div
+                                        key={i}
+                                        initial={{ opacity: 0, y: 6 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ duration: 0.2 }}
+                                        className={`flex ${m.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+                                    >
                                         <div className="max-w-[88%]">
                                             {/* Thinking indicator */}
                                             {m.sender === 'ai' && m.thinking && (
-                                                <div className="mb-1 flex items-center gap-1 text-[10px] text-purple-500 dark:text-purple-400">
+                                                <div className="mb-1 flex items-center gap-1 text-[10px] text-adiptify-olive dark:text-adiptify-olive">
                                                     {m.isStreaming && !m.content ? (
                                                         <Loader2 size={10} className="animate-spin" />
                                                     ) : (
@@ -246,15 +253,15 @@ const AITutor = () => {
                                                 </div>
                                             )}
 
-                                            <div className={`px-3 py-2 text-[13px] leading-relaxed ${m.sender === 'user'
-                                                ? 'bg-adiptify-navy text-white rounded-2xl rounded-br-sm'
-                                                : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-2xl rounded-bl-sm shadow-sm border border-slate-100 dark:border-slate-700'
+                                            <div className={`px-3.5 py-2.5 text-[13px] leading-relaxed ${m.sender === 'user'
+                                                ? 'bg-gradient-to-br from-adiptify-navy to-[#1e2d45] text-white rounded-2xl rounded-br-md shadow-sm'
+                                                : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 rounded-2xl rounded-bl-md shadow-sm border border-slate-100 dark:border-slate-700'
                                             }`}>
                                                 {m.sender === 'ai' ? (
                                                     m.content ? renderInline(m.content) : (
                                                         m.isStreaming ? (
                                                             <div className="flex items-center gap-2">
-                                                                <Loader2 size={14} className="animate-spin text-slate-400" />
+                                                                <Loader2 size={14} className="animate-spin text-adiptify-gold" />
                                                                 <span className="text-xs text-slate-400">{m.thinking ? 'Thinking...' : 'Connecting...'}</span>
                                                             </div>
                                                         ) : null
@@ -262,26 +269,26 @@ const AITutor = () => {
                                                 ) : m.content}
                                             </div>
                                         </div>
-                                    </div>
+                                    </motion.div>
                                 ))}
                                 <div ref={messagesEndRef} />
                             </div>
 
-                            {/* Input */}
-                            <form onSubmit={handleSend} className="p-3 bg-white dark:bg-slate-800 border-t border-slate-100 dark:border-slate-700 flex gap-2 flex-shrink-0">
+                            {/* Input — polished with brand colors */}
+                            <form onSubmit={handleSend} className="p-3 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 flex gap-2 flex-shrink-0">
                                 <input
                                     type="text"
                                     placeholder="Ask a question..."
                                     value={input}
                                     onChange={(e) => setInput(e.target.value)}
                                     disabled={isStreaming}
-                                    className="flex-1 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-800 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-adiptify-gold/50 focus:border-adiptify-gold transition-all disabled:opacity-50 placeholder:text-slate-400 dark:placeholder:text-slate-500"
+                                    className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-adiptify-gold/40 focus:border-adiptify-gold transition-all disabled:opacity-50 placeholder:text-slate-400 dark:placeholder:text-slate-500"
                                 />
                                 {isStreaming ? (
                                     <button
                                         type="button"
                                         onClick={handleStop}
-                                        className="w-9 h-9 rounded-xl bg-red-500 text-white flex items-center justify-center hover:bg-red-600 transition-all"
+                                        className="w-10 h-10 rounded-xl bg-adiptify-terracotta text-white flex items-center justify-center hover:bg-adiptify-terracotta/90 transition-all flex-shrink-0"
                                     >
                                         <StopCircle size={16} />
                                     </button>
@@ -289,7 +296,7 @@ const AITutor = () => {
                                     <button
                                         type="submit"
                                         disabled={!input.trim()}
-                                        className="w-9 h-9 rounded-xl bg-adiptify-navy dark:bg-adiptify-gold text-white dark:text-slate-900 flex items-center justify-center hover:bg-adiptify-navy/90 dark:hover:bg-adiptify-gold/90 transition-all disabled:opacity-40"
+                                        className="w-10 h-10 rounded-xl bg-gradient-to-br from-adiptify-navy to-[#1e2d45] dark:from-adiptify-gold dark:to-adiptify-terracotta text-white dark:text-adiptify-navy flex items-center justify-center hover:shadow-md transition-all disabled:opacity-30 disabled:bg-slate-200 dark:disabled:bg-slate-700 disabled:text-slate-400 disabled:from-slate-200 disabled:to-slate-200 flex-shrink-0"
                                     >
                                         <Send size={16} />
                                     </button>

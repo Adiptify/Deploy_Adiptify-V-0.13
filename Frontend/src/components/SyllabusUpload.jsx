@@ -36,7 +36,7 @@ const SyllabusUpload = ({ onComplete }) => {
 
         try {
             const token = localStorage.getItem('adiptify_token');
-            const res = await fetch('http://localhost:4000/api/syllabus/upload', {
+            const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/syllabus/upload`, {
                 method: 'POST',
                 headers: {
                     ...(token ? { Authorization: `Bearer ${token}` } : {})

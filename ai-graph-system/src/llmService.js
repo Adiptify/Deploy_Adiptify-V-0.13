@@ -61,48 +61,74 @@ export const getAIResponse = async (topic, pathContext = "") => {
     Each description MUST be at least 2-3 sentences long.
     `;
 
-  const systemPrompt = isInitial ? initialPrompt : expansionPrompt;
+  let systemPrompt = isInitial ? initialPrompt : expansionPrompt;
+  let userPrompt = isInitial ? `Generate a complete 2-level deep graph for ${topic}` : `Expand on ${topic}`;
 
-  try {
-    const response = await fetch('http://localhost:11434/api/chat', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-oss:120b-cloud',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: isInitial ? `Generate a complete 2-level deep graph for ${topic}` : `Expand on ${topic}` }
-        ],
-        stream: false,
-        format: 'json'
-      })
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const data = await response.json();
-
-    if (!data.message || !data.message.content) {
-      throw new Error("Invalid response format from Ollama API");
-    }
-
-    const content = data.message.content.trim();
+  for (let attempt = 1; attempt <= 3; attempt++) {
     try {
-      return JSON.parse(content);
-    } catch (parseError) {
-      console.error("JSON Parse Error:", parseError, "Content:", content);
-      const jsonMatch = content.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        return JSON.parse(jsonMatch[0]);
+      const response = await fetch('http://localhost:11434/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'gpt-oss:120b-cloud',
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: userPrompt }
+          ],
+          stream: false,
+          format: 'json'
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
-      throw parseError;
+
+      const data = await response.json();
+
+      if (!data.message || !data.message.content) {
+        throw new Error("Invalid response format from Ollama API");
+      }
+
+      let content = data.message.content.trim();
+      let parsed = null;
+      
+      try {
+        parsed = JSON.parse(content);
+      } catch (e) {}
+
+      if (!parsed && content.startsWith("```")) {
+        let noMd = content.replace(/^```(?:json)?\s*\n?/, "").replace(/\n?```\s*$/, "");
+        try { parsed = JSON.parse(noMd); } catch (e) {}
+      }
+
+      if (!parsed) {
+        const mdMatch = content.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+        if (mdMatch && mdMatch[1]) {
+          try { parsed = JSON.parse(mdMatch[1].trim()); } catch (e) {}
+        }
+      }
+
+      if (!parsed) {
+        const objMatch = content.match(/\{[\s\S]*\}/);
+        if (objMatch) {
+          try { parsed = JSON.parse(objMatch[0]); } catch (e) {}
+        }
+      }
+
+      if (parsed) {
+        return parsed;
+      }
+      
+      throw new Error("Could not extract valid JSON from response.");
+    } catch (error) {
+      console.warn(`[LLM Service] Attempt ${attempt} failed:`, error.message);
+      userPrompt += `\n\nCRITICAL FEEDBACK ON PREVIOUS ATTEMPT:\nYour previous response failed to parse as valid JSON. Error: ${error.message}. Please strictly output ONLY valid JSON without any markdown formatting or preamble.`;
     }
-  } catch (error) {
-    console.error("LLM Service Error:", error);
-    return isInitial ? { root: { id: 'root', label: topic, desc: 'Error generating graph' }, children: [] } : { nodes: [] };
   }
+
+  console.error("LLM Service Error: Failed after 3 attempts");
+  return isInitial ? { root: { id: 'root', label: topic, desc: 'Error generating graph' }, children: [] } : { nodes: [] };
 };

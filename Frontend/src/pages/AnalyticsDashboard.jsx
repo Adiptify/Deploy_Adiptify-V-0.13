@@ -197,10 +197,10 @@ function EmptyAnalyticsState() {
                 Your analytics will populate as you explore subjects, complete study modules, and perform spaced reviews.
             </p>
             <div className="flex gap-4">
-                <button onClick={() => navigate('/subjects')} className="px-6 py-2.5 rounded-xl bg-adiptify-navy dark:bg-slate-700 text-white font-medium text-sm hover:bg-slate-700 transition-colors">
+                <button onClick={() => navigate('/catalog')} className="px-6 py-2.5 rounded-xl bg-adiptify-navy dark:bg-slate-700 text-white font-medium text-sm hover:bg-slate-700 transition-colors">
                     Explore Subjects
                 </button>
-                <button onClick={() => navigate('/study-modules')} className="px-6 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-medium text-sm hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                <button onClick={() => navigate('/modules')} className="px-6 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-medium text-sm hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
                     Go to Modules
                 </button>
             </div>

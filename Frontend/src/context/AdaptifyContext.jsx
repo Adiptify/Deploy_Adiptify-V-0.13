@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 
 const AdaptifyContext = createContext();
 
-const API_BASE = 'http://localhost:4000/api';
+const API_BASE = (import.meta.env.VITE_API_BASE_URL || '') + '/api';
 
 // Helper: get auth headers
 function getAuthHeaders() {

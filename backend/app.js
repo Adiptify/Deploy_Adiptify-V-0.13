@@ -5,7 +5,12 @@ import express from "express";
 import cors from "cors";
 import morgan from "morgan";
 import mongoose from "mongoose";
+import path from "path";
+import { fileURLToPath } from "url";
 import { config } from "./config/index.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 import authRoutes from "./routes/auth.js";
 import aiRoutes from "./routes/ai.js";
@@ -29,10 +34,11 @@ import tutorRoutes from "./routes/tutor.js";
 import settingsRoutes from "./routes/settings.js";
 import organizationsRoutes from "./routes/organizations.js";
 import leaderboardRoutes from "./routes/leaderboard.js";
+import planRoutes from "./routes/plan.js";
 
 const app = express();
 
-app.use(cors({ origin: "*", credentials: true }));
+app.use(cors({ origin: true, credentials: true }));
 app.use(express.json({ limit: "10mb" }));
 app.use(morgan("dev"));
 
@@ -68,6 +74,28 @@ app.use("/api/tutor", tutorRoutes);
 app.use("/api/settings", settingsRoutes);
 app.use("/api/organizations", organizationsRoutes);
 app.use("/api/leaderboard", leaderboardRoutes);
+app.use("/api/plan", planRoutes);
+
+// ═══════════════════════════════════════════════════════════
+// Serve Frontend Static Files in Production (Azure App Service)
+// The React app is pre-built and placed in ../Frontend/dist
+// ═══════════════════════════════════════════════════════════
+const frontendDist = path.join(__dirname, "..", "Frontend", "dist");
+app.use(express.static(frontendDist));
+
+// SPA fallback — any non-API route serves index.html for React Router
+app.get(/^(?!\/api).*/, (req, res) => {
+    const indexPath = path.join(frontendDist, "index.html");
+    res.sendFile(indexPath, (err) => {
+        if (err) {
+            // If frontend is not built yet, just return a helpful message
+            res.status(200).json({
+                message: "Adiptify API is running. Frontend not built yet.",
+                hint: "Run 'npm run build' in the Frontend directory first."
+            });
+        }
+    });
+});
 
 // MongoDB connection — using Atlas URI from .env
 mongoose
@@ -79,6 +107,11 @@ mongoose
     .then(() => {
         console.log(`✅ MongoDB Atlas connected → db: ${config.mongoDb}`);
 
+        const PORT = config.port;
+        app.listen(PORT, () => {
+            console.log(`🚀 Adiptify API listening on port ${PORT}`);
+        });
+
         // Initialize event-driven services after DB is ready
         import('./services/leaderboardService.js').then(({ initLeaderboardListeners }) => {
             initLeaderboardListeners();
@@ -89,10 +122,5 @@ mongoose
         console.error("   Check MONGO_URI in .env");
         process.exit(1); // Exit so nodemon restarts with a clear error
     });
-
-const PORT = config.port;
-app.listen(PORT, () => {
-    console.log(`🚀 Adiptify API listening on port ${PORT}`);
-});
 
 // Trigger nodemon restart

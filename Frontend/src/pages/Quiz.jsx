@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useQuiz } from '../context/QuizContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight, CheckCircle, Clock, AlertTriangle } from 'lucide-react';
+import ProctoringShield from '../components/dashboard/ProctoringShield';
 
 const Quiz = () => {
     const { id } = useParams();
@@ -75,7 +76,8 @@ const Quiz = () => {
     }, []);
 
     if (!quiz) return (
-        <div className="flex-1 flex flex-col items-center justify-center p-6">
+        <div className="flex-1 h-full flex flex-col items-center bg-slate-50 dark:bg-slate-900 overflow-y-auto">
+            <ProctoringShield />
             <div className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-2xl p-6 text-center max-w-md">
                 <AlertTriangle className="mx-auto mb-3 text-red-500" size={40} />
                 <h2 className="text-lg font-bold text-red-800 dark:text-red-300 mb-2">Quiz Not Found</h2>
@@ -95,7 +97,8 @@ const Quiz = () => {
     const isLowTime = timeLeft < 60;
 
     return (
-        <div className="flex-1 overflow-y-auto p-6 bg-slate-50 dark:bg-slate-900">
+        <div className="flex-1 overflow-y-auto p-6 bg-slate-50 dark:bg-slate-900 relative">
+            <ProctoringShield />
             {/* Header row */}
             <div className="flex items-center justify-between mb-5">
                 <h1 className="text-xl font-bold text-adiptify-navy dark:text-white">{quiz.title}</h1>

@@ -51,13 +51,13 @@ export function useOllama() {
                 ...newMessages
             ];
 
-            const response = await fetch('http://localhost:11434/api/chat', {
+            const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/ai/ollama-proxy`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    model: 'deepseek-r1', // Placeholder: using deepseek-r1 or llama3 as typically available in ollama, will use deepseek-v3 if configured locally
+                    model: 'deepseek-r1',
                     messages: apiMessages,
                     stream: true,
                 }),

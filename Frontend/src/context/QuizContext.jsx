@@ -23,7 +23,7 @@ export const QuizProvider = ({ children }) => {
     useEffect(() => {
         const checkOllama = async () => {
             try {
-                const response = await fetch('http://localhost:11434/api/tags');
+                const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/ai/ollama-status`);
                 if (response.ok) {
                     const data = await response.json();
                     setOllamaStatus('connected');

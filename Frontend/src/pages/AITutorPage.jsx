@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { useQuiz } from '../context/QuizContext';
 import { apiFetch } from '../api/client';
 
-const API_BASE = 'http://localhost:4000';
+const API_BASE = import.meta.env.VITE_API_BASE_URL || '';
 
 // ─── Markdown-lite renderer ────────────────────────────────
 function renderMarkdown(text) {
@@ -172,11 +172,9 @@ function MessageBubble({ message, navigate }) {
             transition={{ duration: 0.25 }}
             className={`flex ${isUser ? 'justify-end' : 'justify-start'} group`}
         >
-            {!isUser && (
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-adiptify-navy/20 to-adiptify-gold/20 dark:from-adiptify-gold/30 dark:to-adiptify-navy/30 flex-shrink-0 mr-3 flex items-center justify-center mt-1">
-                    <Bot size={15} className="text-adiptify-navy dark:text-adiptify-gold" />
+                <div className="w-8 h-8 rounded-full flex-shrink-0 mr-3 flex items-center justify-center mt-1">
+                    <img src="/favicon.png" alt="Adiptify" className="w-6 h-6 object-contain shadow-sm drop-shadow-sm" />
                 </div>
-            )}
             <div className={`max-w-[78%] relative ${!isUser ? 'group' : ''}`}>
                 {/* Thinking block */}
                 {!isUser && message.thinking && (
@@ -518,8 +516,8 @@ const AITutorPage = () => {
                 {/* Header */}
                 <div className="h-14 border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md flex items-center justify-between px-6 z-10 flex-shrink-0">
                     <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-adiptify-navy/10 to-adiptify-gold/20 dark:from-adiptify-gold/30 dark:to-adiptify-navy/20 flex items-center justify-center">
-                            <Bot size={18} className="text-adiptify-navy dark:text-adiptify-gold" />
+                        <div className="w-9 h-9 flex items-center justify-center">
+                            <img src="/favicon.png" alt="Adiptify" className="w-8 h-8 object-contain drop-shadow-md" />
                         </div>
                         <div>
                             <h2 className="font-semibold text-slate-800 dark:text-white leading-tight text-sm">AI Study Tutor</h2>
@@ -544,7 +542,7 @@ const AITutorPage = () => {
                 <div className="flex-1 overflow-y-auto p-6 space-y-5 custom-scrollbar scroll-smooth">
                     {messages.length === 0 && !activeSessionId && (
                         <div className="h-full flex flex-col items-center justify-center text-slate-400 opacity-50">
-                            <Bot size={48} className="mb-4" />
+                            <img src="/favicon.png" alt="Adiptify" className="w-16 h-16 object-contain mb-4 opacity-70" />
                             <p className="text-lg font-medium">How can I help you study today?</p>
                             <p className="text-sm mt-1">Start typing or select a conversation from the sidebar.</p>
                         </div>

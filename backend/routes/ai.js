@@ -17,6 +17,8 @@ import { generateQuestionsFromTopic, generateExplanation, validateSubject, parse
 import { cleanText, chunkText } from "../utils/pdfUtils.js";
 import { parsePptxToJson, extractSlideTexts, chunkSlides } from "../utils/pptUtils.js";
 import { extractPdfPages, extractSlides, chunkGenerator } from "../utils/parserUtils.js";
+import { parseDocumentFromBuffer, chunkAzureText } from "../services/azureDocumentService.js";
+import { uploadContext } from "../services/azureSearchService.js";
 import { mergeSyllabusPartials } from "../utils/syllabusAggregator.js";
 import GeneratedAssessment from "../models/GeneratedAssessment.js";
 import Content from "../models/Content.js";
@@ -42,9 +44,21 @@ router.post("/parse-pdf", auth, upload.single("file"), async (req, res) => {
 
         console.log(`[parse-pdf] Starting structured pipeline for: ${filename}`);
 
-        // ── Step 2: Stream → Chunk → Structured Pipeline ──
-        const pageStream = extractPdfPages(buffer);
-        const chunks = chunkGenerator(pageStream, 500);
+        // ── Step 2: Extract & Chunk using Azure or Local Fallback ──
+        let chunks;
+        try {
+            if (process.env.DOCUMENT_INTELLIGENCE_ENDPOINT) {
+                console.log(`[parse-pdf] Using Azure AI Document Intelligence for: ${filename}`);
+                const extractedText = await parseDocumentFromBuffer(buffer, "prebuilt-layout");
+                chunks = chunkAzureText(extractedText, 500, 50);
+            } else {
+                throw new Error("Azure endpoint missing, falling back to local stream extraction");
+            }
+        } catch (azureErr) {
+            console.warn("[parse-pdf] Azure parsing unavailable/failed:", azureErr.message);
+            const pageStream = extractPdfPages(buffer);
+            chunks = chunkGenerator(pageStream, 500);
+        }
 
         const syllabus = await parseSyllabusPipeline(chunks, (done, total) => {
             console.log(`[parse-pdf] Progress: ${done}/${total} chunks`);
@@ -94,6 +108,13 @@ router.post("/parse-pdf", auth, upload.single("file"), async (req, res) => {
             }
 
             syllabusData._createdSubject = subject;
+
+            // Upload context to Azure AI Search for RAG
+            // Note: Since we don't have an embedding function natively here yet, we pass a mock or handle it inside the service.
+            // In a real scenario, you'd call OpenAI or another embedding provider.
+            const mockEmbeddingFunc = async (text) => new Array(1536).fill(0.01);
+            uploadContext(req.user._id.toString(), subject.name, chunks, mockEmbeddingFunc)
+                .catch(err => console.error("Azure Search Upload error:", err.message));
         }
 
         await logAI({
@@ -143,9 +164,21 @@ router.post("/parse-ppt", auth, upload.single("file"), async (req, res) => {
             console.warn(`[parse-ppt] pptxtojson failed, using stream fallback:`, e.message);
         }
 
-        // ── Step 3: Stream → Chunk → Structured Pipeline ──
-        const slideStream = extractSlides(buffer);
-        const chunks = chunkGenerator(slideStream, 500);
+        // ── Step 3: Extract & Chunk using Azure or Local Fallback ──
+        let chunks;
+        try {
+            if (process.env.DOCUMENT_INTELLIGENCE_ENDPOINT) {
+                console.log(`[parse-ppt] Using Azure AI Document Intelligence for: ${filename}`);
+                const extractedText = await parseDocumentFromBuffer(buffer, "prebuilt-layout");
+                chunks = chunkAzureText(extractedText, 500, 50);
+            } else {
+                throw new Error("Azure endpoint missing, falling back to local stream extraction");
+            }
+        } catch (azureErr) {
+            console.warn("[parse-ppt] Azure parsing unavailable/failed:", azureErr.message);
+            const slideStream = extractSlides(buffer);
+            chunks = chunkGenerator(slideStream, 500);
+        }
 
         const syllabus = await parseSyllabusPipeline(chunks, (done, total) => {
             console.log(`[parse-ppt] Progress: ${done}/${total} chunks`);
@@ -566,5 +599,86 @@ router.post("/generate-for-subject", auth, async (req, res) => {
     }
 });
 
-export default router;
+// ═══════════════════════════════════════════════════════════
+// Ollama Proxy Routes — enables frontend to reach Ollama
+// through the backend (required for Azure App Service deployment)
+// ═══════════════════════════════════════════════════════════
 
+import { config } from "../config/index.js";
+
+/**
+ * GET /api/ai/ollama-status
+ * Returns Ollama model list (proxied from backend to avoid CORS / network issues in production)
+ */
+router.get("/ollama-status", async (req, res) => {
+    try {
+        const ollamaUrl = config.ollamaBaseUrl || "http://localhost:11434";
+        const response = await fetch(`${ollamaUrl}/api/tags`);
+        if (!response.ok) {
+            return res.status(response.status).json({ error: "Ollama unreachable" });
+        }
+        const data = await response.json();
+        return res.json(data);
+    } catch (e) {
+        return res.status(503).json({ error: "Ollama service unavailable", message: e.message });
+    }
+});
+
+/**
+ * POST /api/ai/ollama-proxy
+ * Proxies chat requests to Ollama (streaming supported)
+ * This allows the frontend to call Ollama through the backend on Azure
+ */
+router.post("/ollama-proxy", async (req, res) => {
+    try {
+        const ollamaUrl = config.ollamaBaseUrl || "http://localhost:11434";
+        const { model, messages, stream } = req.body;
+
+        const response = await fetch(`${ollamaUrl}/api/chat`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                model: model || config.ollamaModel || "deepseek-r1",
+                messages,
+                stream: stream !== false,
+            }),
+        });
+
+        if (!response.ok) {
+            const text = await response.text();
+            return res.status(response.status).json({ error: text });
+        }
+
+        if (stream !== false) {
+            // Stream the response back to the client
+            res.setHeader("Content-Type", "application/x-ndjson");
+            res.setHeader("Cache-Control", "no-cache");
+            res.setHeader("Connection", "keep-alive");
+
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+
+            try {
+                while (true) {
+                    const { value, done } = await reader.read();
+                    if (done) break;
+                    const chunk = decoder.decode(value, { stream: true });
+                    res.write(chunk);
+                }
+            } catch (streamErr) {
+                console.error("[ollama-proxy] Stream error:", streamErr.message);
+            } finally {
+                res.end();
+            }
+        } else {
+            // Non-streaming: return full JSON response
+            const data = await response.json();
+            return res.json(data);
+        }
+    } catch (e) {
+        console.error("[ollama-proxy] Error:", e.message);
+        return res.status(503).json({ error: "Ollama proxy failed", message: e.message });
+    }
+});
+
+export default router;

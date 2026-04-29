@@ -7,6 +7,7 @@ import ChatMessage from "../models/ChatMessage.js";
 import Subject from "../models/Subject.js";
 import { Ollama } from 'ollama';
 import { config } from "../config/index.js";
+import { fetchPerfectContext } from "../services/azureSearchService.js";
 
 const router = express.Router();
 
@@ -246,6 +247,18 @@ router.post("/sessions/:id/stream", auth, async (req, res) => {
         let systemPrompt = "You are Adiptify, an adaptive AI tutor. Provide clear, structured answers using markdown. Include code examples where relevant.";
         if (session.subjectId) {
             systemPrompt += `\n\nSubject context: ${session.subjectId.name}`;
+            
+            // Perform RAG fetch
+            try {
+                const mockVector = new Array(1536).fill(0.01);
+                const contexts = await fetchPerfectContext(req.user._id.toString(), session.subjectId.name, message, mockVector, 3);
+                if (contexts && contexts.length > 0) {
+                    systemPrompt += `\n\nRelevant Subject Material:\n`;
+                    contexts.forEach(c => systemPrompt += `\n- ${c.content}`);
+                }
+            } catch (e) {
+                console.warn("[Chat] Failed to fetch RAG context:", e.message);
+            }
         }
         if (context.mastery) {
             systemPrompt += `\nStudent mastery: ${context.mastery}%`;

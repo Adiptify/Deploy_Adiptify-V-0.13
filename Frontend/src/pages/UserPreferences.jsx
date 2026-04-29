@@ -4,14 +4,13 @@ import { Settings, BookOpen, SlidersHorizontal, Bell, User, Check, Plus, Minus, 
 import { useAdaptify } from '../context/AdaptifyContext';
 import { useQuiz } from '../context/QuizContext';
 
-const API_BASE = 'http://localhost:4000/api';
+const API_BASE = (import.meta.env.VITE_API_BASE_URL || '') + '/api';
 
 function getAuthHeaders() {
     try {
-        const userData = localStorage.getItem('quiz_user');
-        if (userData) {
-            const user = JSON.parse(userData);
-            return { 'Content-Type': 'application/json', 'Authorization': `Bearer ${user.token}` };
+        const token = localStorage.getItem('adiptify_token');
+        if (token) {
+            return { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` };
         }
     } catch (e) { /* ignore */ }
     return { 'Content-Type': 'application/json' };
@@ -299,47 +298,6 @@ export default function UserPreferences() {
                             exit={{ opacity: 0, y: -10 }}
                             className="space-y-8"
                         >
-                            {/* Quiz Mode */}
-                            <div>
-                                <h3 className="text-lg font-bold text-adiptify-navy dark:text-white mb-1">Quiz Mode</h3>
-                                <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">Choose your preferred question format.</p>
-                                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                                    {QUIZ_MODES.map(mode => (
-                                        <button
-                                            key={mode.value}
-                                            onClick={() => setPreferences(p => ({ ...p, quizMode: mode.value }))}
-                                            className={`p-4 rounded-xl border-2 text-left transition-all ${preferences.quizMode === mode.value
-                                                ? 'border-adiptify-gold bg-adiptify-gold/5 dark:bg-adiptify-gold/10'
-                                                : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-slate-300'
-                                                }`}
-                                        >
-                                            <p className="font-semibold text-adiptify-navy dark:text-white text-sm">{mode.label}</p>
-                                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{mode.desc}</p>
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-
-                            {/* Difficulty */}
-                            <div>
-                                <h3 className="text-lg font-bold text-adiptify-navy dark:text-white mb-1">Difficulty</h3>
-                                <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">Set your default difficulty level.</p>
-                                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                                    {DIFFICULTIES.map(d => (
-                                        <button
-                                            key={d.value}
-                                            onClick={() => setPreferences(p => ({ ...p, difficulty: d.value }))}
-                                            className={`p-4 rounded-xl border-2 text-left transition-all ${preferences.difficulty === d.value
-                                                ? 'border-adiptify-gold bg-adiptify-gold/5 dark:bg-adiptify-gold/10'
-                                                : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-slate-300'
-                                                }`}
-                                        >
-                                            <p className="font-semibold text-adiptify-navy dark:text-white text-sm">{d.label}</p>
-                                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{d.desc}</p>
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
 
                             {/* Daily Goal */}
                             <div>

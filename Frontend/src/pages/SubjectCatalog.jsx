@@ -332,7 +332,7 @@ const SubjectCatalog = () => {
 
         try {
             const token = localStorage.getItem('adiptify_token');
-            const res = await fetch('http://localhost:4000/api/ai/parse-pdf', {
+            const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/ai/parse-pdf`, {
                 method: 'POST',
                 headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
                 body: formData
@@ -383,7 +383,7 @@ const SubjectCatalog = () => {
 
         try {
             const token = localStorage.getItem('adiptify_token');
-            const res = await fetch('http://localhost:4000/api/ai/parse-ppt', {
+            const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/ai/parse-ppt`, {
                 method: 'POST',
                 headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
                 body: formData

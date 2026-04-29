@@ -94,15 +94,82 @@ async function callOllama(systemPrompt, userPrompt, options = {}) {
 }
 
 /**
- * Parse JSON from AI response (handles markdown code blocks)
+ * Parse JSON from AI response (robust extraction for agentic workflow)
  */
 function parseJsonResponse(text) {
     let cleaned = text.trim();
-    // Remove markdown code fences
+    try {
+        return JSON.parse(cleaned);
+    } catch (e) {}
+
+    // Try stripping markdown blocks
     if (cleaned.startsWith("```")) {
-        cleaned = cleaned.replace(/^```(?:json)?\s*\n?/, "").replace(/\n?```\s*$/, "");
+        let noMd = cleaned.replace(/^```(?:json)?\s*\n?/, "").replace(/\n?```\s*$/, "");
+        try { return JSON.parse(noMd); } catch (e) {}
     }
-    return JSON.parse(cleaned);
+
+    // Try finding inner markdown block
+    const mdMatch = cleaned.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+    if (mdMatch && mdMatch[1]) {
+        try { return JSON.parse(mdMatch[1].trim()); } catch (e) {}
+    }
+    
+    // Try regex matching objects or arrays
+    const objMatch = cleaned.match(/\{[\s\S]*\}/);
+    const arrMatch = cleaned.match(/\[[\s\S]*\]/);
+    
+    let objStr = objMatch ? objMatch[0] : null;
+    let arrStr = arrMatch ? arrMatch[0] : null;
+    
+    if (objStr && arrStr) {
+        const target = objStr.length > arrStr.length ? objStr : arrStr;
+        try { return JSON.parse(target); } catch (e) {}
+    } else if (objStr) {
+        try { return JSON.parse(objStr); } catch (e) {}
+    } else if (arrStr) {
+        try { return JSON.parse(arrStr); } catch (e) {}
+    }
+    
+    throw new Error("Could not extract valid JSON from response.");
+}
+
+/**
+ * Call Ollama with an agentic critique-and-revise retry loop and optional timeout
+ */
+async function callOllamaWithRetry(systemPrompt, userPrompt, options = {}, retries = 2) {
+    let lastError;
+    let currentSystemPrompt = systemPrompt;
+    let currentUserPrompt = userPrompt;
+    const timeoutMs = options.timeoutMs || 0;
+
+    for (let attempt = 1; attempt <= retries + 1; attempt++) {
+        try {
+            let rawResponse;
+            const callPromise = callOllama(currentSystemPrompt, currentUserPrompt, options);
+            
+            if (timeoutMs > 0) {
+                rawResponse = await Promise.race([
+                    callPromise,
+                    new Promise((_, reject) => setTimeout(() => reject(new Error(`Ollama call timed out after ${timeoutMs / 1000}s`)), timeoutMs))
+                ]);
+            } else {
+                rawResponse = await callPromise;
+            }
+            
+            if (!options.requireJson) {
+                return { rawResponse, parsed: null };
+            }
+            
+            const parsed = parseJsonResponse(rawResponse);
+            return { rawResponse, parsed };
+            
+        } catch (err) {
+            lastError = err;
+            console.warn(`[Agentic Workflow] Attempt ${attempt} failed: ${err.message}. Retrying...`);
+            currentUserPrompt = userPrompt + `\n\nCRITICAL FEEDBACK ON PREVIOUS ATTEMPT:\nYour previous response failed to parse as valid JSON or timed out. Error: ${err.message}. Please strictly output ONLY valid JSON. No prose, no markdown fences.`;
+        }
+    }
+    throw new Error(`Failed after ${retries + 1} attempts. Last error: ${lastError.message}`);
 }
 
 /**
@@ -112,17 +179,11 @@ export async function generateQuestionsFromTopic(topic, options = {}) {
     const count = options.count || 5;
     const distribution = options.distribution || { easy: 2, medium: 2, hard: 1 };
 
-    const rawResponse = await callOllama(
+    const { rawResponse, parsed } = await callOllamaWithRetry(
         QUESTION_GENERATOR_SYSTEM,
-        questionGeneratorUser(topic, count, distribution)
+        questionGeneratorUser(topic, count, distribution),
+        { requireJson: true }
     );
-
-    let parsed;
-    try {
-        parsed = parseJsonResponse(rawResponse);
-    } catch (e) {
-        throw new Error("Failed to parse AI response as JSON: " + e.message);
-    }
 
     const items = parsed.items || parsed;
     if (!Array.isArray(items)) throw new Error("AI response did not contain an items array");
@@ -152,14 +213,16 @@ function difficultyToNumber(d) {
 }
 
 export async function generateExplanation(question, correctOption, studentAnswer, topic) {
-    const raw = await callOllama(
-        EXPLANATION_SYSTEM,
-        explanationUser(question, correctOption, studentAnswer, topic)
-    );
     try {
-        return parseJsonResponse(raw);
-    } catch {
-        return { explanation: raw, remediationResources: [] };
+        const { parsed } = await callOllamaWithRetry(
+            EXPLANATION_SYSTEM,
+            explanationUser(question, correctOption, studentAnswer, topic),
+            { requireJson: true },
+            1 // 1 retry
+        );
+        return parsed;
+    } catch (e) {
+        return { explanation: "Could not generate an explanation at this time.", remediationResources: [] };
     }
 }
 
@@ -198,16 +261,14 @@ export async function chatWithTutor(messages, context = null) {
  * Parse Syllabus JSON from raw text (e.g. PDF extraction) — single-shot
  */
 export async function parseSyllabusFromText(text) {
-    const rawResponse = await callOllama(
+    const { rawResponse, parsed } = await callOllamaWithRetry(
         PARSE_SYLLABUS_SYSTEM,
-        parseSyllabusUser(text)
+        parseSyllabusUser(text),
+        { requireJson: true },
+        2
     );
 
-    try {
-        return parseJsonResponse(rawResponse);
-    } catch (e) {
-        throw new Error("Failed to parse PDF content into valid syllabus JSON. AI Raw Response: " + rawResponse.substring(0, 100));
-    }
+    return parsed;
 }
 
 /**
@@ -228,12 +289,12 @@ export async function parseSyllabusChunked(chunks, onProgress = null) {
         }
 
         try {
-            const rawResponse = await callOllama(
+            const { parsed } = await callOllamaWithRetry(
                 PARSE_SYLLABUS_CHUNK_SYSTEM,
-                parseSyllabusChunkUser(chunks[i], i, chunks.length)
+                parseSyllabusChunkUser(chunks[i], i, chunks.length),
+                { requireJson: true },
+                1
             );
-
-            const parsed = parseJsonResponse(rawResponse);
             partials.push(parsed);
         } catch (err) {
             console.warn(`[parseSyllabusChunked] Chunk ${i + 1}/${chunks.length} failed:`, err.message);
@@ -262,25 +323,14 @@ export async function parseSyllabusIterative(chunkGenerator) {
 
     for await (const chunk of chunkGenerator) {
         try {
-            const response = await ollama.chat({
-                model: config.ollamaModel || 'llama3',
-                messages: [
-                    { role: "system", content: PERFECT_PARSER_CHUNK_SYSTEM },
-                    { role: "user", content: perfectParserChunkUser(chunk) },
-                ],
-                format: 'json',
-                stream: false
-            });
+            const { parsed } = await callOllamaWithRetry(
+                PERFECT_PARSER_CHUNK_SYSTEM,
+                perfectParserChunkUser(chunk),
+                { format: 'json', requireJson: true },
+                1
+            );
 
-            const result = response.message?.content || "";
-            if (!result) continue;
-
-            let data;
-            try {
-                data = JSON.parse(result);
-            } catch (e) {
-                data = parseJsonResponse(result);
-            }
+            const data = parsed;
 
             const topics = data.topics || (Array.isArray(data) ? data : []);
 
@@ -361,19 +411,14 @@ export async function parseSyllabusPipeline(chunkSource, onProgress = null) {
         
         const batchPromises = batch.map((chunk, batchIdx) => {
             const chunkIdx = i + batchIdx;
-            return callOllamaWithTimeout(
+            return callOllamaWithRetry(
                 PARSE_SYLLABUS_CHUNK_SYSTEM,
                 parseSyllabusChunkUser(chunk, chunkIdx, chunks.length),
-                TIMEOUT_MS
-            ).then(raw => {
-                try {
-                    const parsed = parseJsonResponse(raw);
-                    console.log(`[AI Pipeline] Chunk ${chunkIdx + 1}/${chunks.length} ✓ — ${(parsed.modules || []).length} modules`);
-                    return parsed;
-                } catch (e) {
-                    console.warn(`[AI Pipeline] Chunk ${chunkIdx + 1}/${chunks.length} — JSON parse failed:`, e.message);
-                    return null;
-                }
+                { requireJson: true, timeoutMs: TIMEOUT_MS },
+                1
+            ).then(({ parsed }) => {
+                console.log(`[AI Pipeline] Chunk ${chunkIdx + 1}/${chunks.length} ✓ — ${(parsed.modules || []).length} modules`);
+                return parsed;
             }).catch(err => {
                 console.warn(`[AI Pipeline] Chunk ${chunkIdx + 1}/${chunks.length} — LLM call failed:`, err.message);
                 return null;
@@ -408,17 +453,7 @@ export async function parseSyllabusPipeline(chunkSource, onProgress = null) {
     return merged;
 }
 
-/**
- * Call Ollama with a timeout wrapper
- */
-async function callOllamaWithTimeout(systemPrompt, userPrompt, timeoutMs = 90000) {
-    return Promise.race([
-        callOllama(systemPrompt, userPrompt, { format: 'json' }),
-        new Promise((_, reject) => 
-            setTimeout(() => reject(new Error(`Ollama call timed out after ${timeoutMs / 1000}s`)), timeoutMs)
-        )
-    ]);
-}
+// callOllamaWithTimeout removed as it's replaced by callOllamaWithRetry
 
 /**
  * Filter to exclude meta-topics like POs, PEOs, Reference Books, etc.
@@ -447,9 +482,14 @@ export async function generateTopicNotes(topic, mistakes = []) {
 }
 
 export async function validateSubject(subjectData) {
-    const raw = await callOllama(VALIDATE_SUBJECT_SYSTEM, validateSubjectUser(subjectData), { format: "json" });
     try {
-        return parseJsonResponse(raw);
+        const { parsed } = await callOllamaWithRetry(
+            VALIDATE_SUBJECT_SYSTEM,
+            validateSubjectUser(subjectData),
+            { format: "json", requireJson: true },
+            1
+        );
+        return parsed;
     } catch {
         return { isValid: true, feedback: ["Could not parse AI validation correctly. Approving format by default."], suggestedLevel: "Beginner" };
     }

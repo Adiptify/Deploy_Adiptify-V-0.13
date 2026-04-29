@@ -7,6 +7,8 @@ import { Sparkles, Loader2, AlertCircle, Bot, CheckCircle, Wifi, WifiOff } from 
 const AIQuizGenerator = () => {
     const [topic, setTopic] = useState('');
     const [count, setCount] = useState(5);
+    const [quizMode, setQuizMode] = useState('mixed');
+    const [difficulty, setDifficulty] = useState('adaptive');
     const [isGenerating, setIsGenerating] = useState(false);
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(null);
@@ -25,7 +27,8 @@ const AIQuizGenerator = () => {
                 body: {
                     topic: topic.trim(),
                     count,
-                    distribution: { easy: 2, medium: 2, hard: 1 },
+                    mode: quizMode,
+                    difficulty,
                     saveToBank: true
                 }
             });
@@ -41,7 +44,7 @@ const AIQuizGenerator = () => {
 
             // Try direct Ollama call as fallback (CaseStudy-1 approach)
             try {
-                const ollamaResponse = await fetch('http://localhost:11434/api/chat', {
+                const ollamaResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/ai/ollama-proxy`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -172,6 +175,27 @@ const AIQuizGenerator = () => {
                             <option value={3}>3 Q</option>
                             <option value={5}>5 Q</option>
                             <option value={10}>10 Q</option>
+                        </select>
+                        <select
+                            value={quizMode}
+                            onChange={(e) => setQuizMode(e.target.value)}
+                            disabled={isGenerating}
+                            className="px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-800 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-adiptify-gold/50 disabled:opacity-50"
+                        >
+                            <option value="mixed">Mixed</option>
+                            <option value="mcq">MCQ</option>
+                            <option value="short_answer">Short</option>
+                        </select>
+                        <select
+                            value={difficulty}
+                            onChange={(e) => setDifficulty(e.target.value)}
+                            disabled={isGenerating}
+                            className="px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-800 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-adiptify-gold/50 disabled:opacity-50"
+                        >
+                            <option value="adaptive">Adaptive</option>
+                            <option value="easy">Easy</option>
+                            <option value="medium">Medium</option>
+                            <option value="hard">Hard</option>
                         </select>
                         <button
                             onClick={generateQuiz}

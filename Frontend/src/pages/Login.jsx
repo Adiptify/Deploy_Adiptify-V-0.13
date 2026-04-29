@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../context/ThemeContext';
 import { useQuiz } from '../context/QuizContext';
 import { loginUser, registerUser } from '../api/client';
-import { LogIn, UserPlus, Sun, Moon, Eye, EyeOff, Loader2, AlertCircle, BrainCircuit, Sparkles, GraduationCap } from 'lucide-react';
+import { LogIn, UserPlus, Sun, Moon, Eye, EyeOff, Loader2, AlertCircle, Sparkles } from 'lucide-react';
 
 const Login = () => {
     const [tab, setTab] = useState('login'); // 'login' | 'register'
@@ -68,18 +68,18 @@ const Login = () => {
 
     const Orb = ({ className, delay }) => (
         <div 
-            className={`absolute rounded-full mix-blend-screen filter blur-[80px] opacity-60 dark:opacity-40 animate-pulse ${className}`} 
+            className={`absolute rounded-full mix-blend-screen filter blur-[80px] opacity-50 dark:opacity-30 animate-pulse ${className}`} 
             style={{ animationDelay: delay, animationDuration: '8s' }} 
         />
     );
 
     return (
         <div className="relative min-h-screen w-full overflow-y-auto bg-slate-50 dark:bg-[#0B0F19] flex transition-colors duration-500">
-            {/* Background Animations */}
+            {/* Background Animations — Adiptify branded orbs */}
             <div className="absolute inset-0 pointer-events-none overflow-hidden h-full w-full fixed">
-                <Orb className="w-96 h-96 bg-indigo-400 dark:bg-indigo-600 top-[-10%] left-[-10%]" delay="0ms" />
-                <Orb className="w-[40rem] h-[40rem] bg-violet-400 dark:bg-purple-900 bottom-[-20%] right-[-10%]" delay="2000ms" />
-                <Orb className="w-80 h-80 bg-amber-300 dark:bg-amber-700/60 top-[20%] right-[10%]" delay="4000ms" />
+                <Orb className="w-96 h-96 bg-adiptify-navy/60 dark:bg-adiptify-navy/40 top-[-10%] left-[-10%]" delay="0ms" />
+                <Orb className="w-[40rem] h-[40rem] bg-adiptify-gold/30 dark:bg-adiptify-gold/15 bottom-[-20%] right-[-10%]" delay="2000ms" />
+                <Orb className="w-80 h-80 bg-adiptify-olive/40 dark:bg-adiptify-olive/20 top-[20%] right-[10%]" delay="4000ms" />
                 
                 {/* Subtle Grid overlay */}
                 <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_60%,transparent_100%)]"></div>
@@ -88,7 +88,7 @@ const Login = () => {
             {/* Theme toggle */}
             <button
                 onClick={toggleTheme}
-                className="absolute top-6 right-6 z-50 p-3 rounded-full bg-white/40 dark:bg-slate-800/60 backdrop-blur-md border border-white/60 dark:border-slate-700/50 text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-white shadow-lg transition-all duration-300 hover:scale-105"
+                className="absolute top-6 right-6 z-50 p-3 rounded-full bg-white/40 dark:bg-slate-800/60 backdrop-blur-md border border-white/60 dark:border-slate-700/50 text-slate-700 dark:text-slate-300 hover:text-adiptify-gold dark:hover:text-adiptify-gold shadow-lg transition-all duration-300 hover:scale-105"
                 title={resolvedTheme === 'dark' ? 'Switch to light' : 'Switch to dark'}
             >
                 {resolvedTheme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
@@ -105,8 +105,8 @@ const Login = () => {
                 >
                     <div className="relative bg-white/80 dark:bg-slate-900/70 backdrop-blur-2xl border border-white/60 dark:border-slate-700/50 rounded-[2.5rem] shadow-2xl p-8 sm:p-12 overflow-hidden">
                         
-                        {/* Decorative top gradient border */}
-                        <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-indigo-500 via-purple-500 to-amber-500" />
+                        {/* Decorative top gradient border — Adiptify brand */}
+                        <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-adiptify-navy via-adiptify-gold to-adiptify-terracotta" />
 
                         {/* Logo & Header */}
                         <div className="mb-10 text-center relative z-10">
@@ -114,18 +114,18 @@ const Login = () => {
                                 initial={{ scale: 0.8, opacity: 0 }}
                                 animate={{ scale: 1, opacity: 1 }}
                                 transition={{ delay: 0.2, duration: 0.5, type: "spring", bounce: 0.5 }}
-                                className="inline-flex items-center justify-center w-20 h-20 rounded-[1.5rem] bg-gradient-to-br from-indigo-600 to-purple-600 shadow-[0_0_40px_-10px_rgba(79,70,229,0.5)] mb-6 text-white relative group"
+                                className="mb-6"
                             >
-                                <div className="absolute inset-0 bg-white/20 rounded-[1.5rem] filter blur-md group-hover:blur-xl transition-all opacity-0 group-hover:opacity-100 duration-500"></div>
-                                <BrainCircuit size={40} className="relative z-10" />
+                                <img
+                                    src={resolvedTheme === 'dark' ? '/logos/logo-dark-premium.png' : '/logos/logo-dark-gold.png'}
+                                    alt="Adiptify — Adapting Your Education"
+                                    className="h-20 w-auto mx-auto object-contain"
+                                />
                             </motion.div>
-                            <h1 className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-300 tracking-tight mb-2">
-                                Adiptify
-                            </h1>
                             <p className="text-slate-600 dark:text-slate-400 text-sm font-medium">Your localized learning universe</p>
                         </div>
 
-                        {/* Animated Tabs */}
+                        {/* Animated Tabs — Brand colors */}
                         <div className="relative flex p-1.5 mb-8 bg-slate-200/50 dark:bg-slate-800/80 rounded-2xl backdrop-blur-md z-10 w-full overflow-hidden">
                             <motion.div
                                 className="absolute top-1.5 bottom-1.5 left-1.5 w-[calc(50%-6px)] bg-white dark:bg-slate-700/80 rounded-xl shadow-sm"
@@ -138,7 +138,7 @@ const Login = () => {
                                     onClick={() => setTab(t)}
                                     className={`relative z-10 flex-1 py-3 text-sm font-bold transition-all duration-300 ${
                                         tab === t 
-                                            ? 'text-indigo-600 dark:text-white' 
+                                            ? 'text-adiptify-navy dark:text-adiptify-gold' 
                                             : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
                                     }`}
                                 >
@@ -185,7 +185,7 @@ const Login = () => {
                                                 onChange={(e) => setName(e.target.value)}
                                                 placeholder="John Doe"
                                                 required
-                                                className="w-full px-5 py-3.5 rounded-2xl border border-white/60 dark:border-slate-600/50 bg-white/70 dark:bg-slate-800/70 focus:outline-none focus:ring-2 focus:ring-indigo-500/60 focus:border-indigo-500 transition-all text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 text-sm font-medium backdrop-blur-md shadow-inner hover:bg-white/90 dark:hover:bg-slate-700/80"
+                                                className="w-full px-5 py-3.5 rounded-2xl border border-white/60 dark:border-slate-600/50 bg-white/70 dark:bg-slate-800/70 focus:outline-none focus:ring-2 focus:ring-adiptify-gold/60 focus:border-adiptify-gold transition-all text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 text-sm font-medium backdrop-blur-md shadow-inner hover:bg-white/90 dark:hover:bg-slate-700/80"
                                             />
                                         </div>
                                     )}
@@ -198,7 +198,7 @@ const Login = () => {
                                             onChange={(e) => setEmail(e.target.value)}
                                             placeholder="you@university.edu"
                                             required
-                                            className="w-full px-5 py-3.5 rounded-2xl border border-white/60 dark:border-slate-600/50 bg-white/70 dark:bg-slate-800/70 focus:outline-none focus:ring-2 focus:ring-indigo-500/60 focus:border-indigo-500 transition-all text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 text-sm font-medium backdrop-blur-md shadow-inner hover:bg-white/90 dark:hover:bg-slate-700/80"
+                                            className="w-full px-5 py-3.5 rounded-2xl border border-white/60 dark:border-slate-600/50 bg-white/70 dark:bg-slate-800/70 focus:outline-none focus:ring-2 focus:ring-adiptify-gold/60 focus:border-adiptify-gold transition-all text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 text-sm font-medium backdrop-blur-md shadow-inner hover:bg-white/90 dark:hover:bg-slate-700/80"
                                         />
                                     </div>
 
@@ -212,7 +212,7 @@ const Login = () => {
                                                 value={studentId}
                                                 onChange={(e) => setStudentId(e.target.value)}
                                                 placeholder="e.g. 23BAI70412"
-                                                className="w-full px-5 py-3.5 rounded-2xl border border-white/60 dark:border-slate-600/50 bg-white/70 dark:bg-slate-800/70 focus:outline-none focus:ring-2 focus:ring-indigo-500/60 focus:border-indigo-500 transition-all text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 text-sm font-medium backdrop-blur-md shadow-inner hover:bg-white/90 dark:hover:bg-slate-700/80"
+                                                className="w-full px-5 py-3.5 rounded-2xl border border-white/60 dark:border-slate-600/50 bg-white/70 dark:bg-slate-800/70 focus:outline-none focus:ring-2 focus:ring-adiptify-gold/60 focus:border-adiptify-gold transition-all text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 text-sm font-medium backdrop-blur-md shadow-inner hover:bg-white/90 dark:hover:bg-slate-700/80"
                                             />
                                         </div>
                                     )}
@@ -221,7 +221,7 @@ const Login = () => {
                                         <div className="flex justify-between items-center ml-1">
                                             <label className="block text-sm font-bold text-slate-700 dark:text-slate-300">Password</label>
                                             {tab === 'login' && (
-                                                <a href="#" className="flex-shrink-0 text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors">
+                                                <a href="#" className="flex-shrink-0 text-xs font-bold text-adiptify-terracotta dark:text-adiptify-gold hover:text-adiptify-gold dark:hover:text-adiptify-terracotta transition-colors">
                                                     Forgot?
                                                 </a>
                                             )}
@@ -234,12 +234,12 @@ const Login = () => {
                                                 placeholder={tab === 'register' ? "Minimum 6 characters" : "••••••••"}
                                                 required
                                                 minLength={tab === 'register' ? 6 : undefined}
-                                                className="w-full px-5 py-3.5 pr-14 rounded-2xl border border-white/60 dark:border-slate-600/50 bg-white/70 dark:bg-slate-800/70 focus:outline-none focus:ring-2 focus:ring-indigo-500/60 focus:border-indigo-500 transition-all text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 text-sm font-medium backdrop-blur-md shadow-inner hover:bg-white/90 dark:hover:bg-slate-700/80"
+                                                className="w-full px-5 py-3.5 pr-14 rounded-2xl border border-white/60 dark:border-slate-600/50 bg-white/70 dark:bg-slate-800/70 focus:outline-none focus:ring-2 focus:ring-adiptify-gold/60 focus:border-adiptify-gold transition-all text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 text-sm font-medium backdrop-blur-md shadow-inner hover:bg-white/90 dark:hover:bg-slate-700/80"
                                             />
                                             <button 
                                                 type="button" 
                                                 onClick={() => setShowPassword(!showPassword)} 
-                                                className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 p-1.5 rounded-lg transition-colors focus:outline-none"
+                                                className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-adiptify-navy dark:hover:text-adiptify-gold p-1.5 rounded-lg transition-colors focus:outline-none"
                                             >
                                                 {showPassword ? <EyeOff size={18} strokeWidth={2.5} /> : <Eye size={18} strokeWidth={2.5} />}
                                             </button>
@@ -249,9 +249,9 @@ const Login = () => {
                                     <button
                                         type="submit"
                                         disabled={loading}
-                                        className="relative w-full overflow-hidden group mt-10 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white rounded-2xl py-4 font-extrabold text-[15px] transition-all shadow-[0_8px_25px_-8px_rgba(79,70,229,0.6)] active:scale-[0.98] disabled:opacity-75 disabled:cursor-not-allowed disabled:active:scale-100 flex items-center justify-center gap-2"
+                                        className="relative w-full overflow-hidden group mt-10 bg-gradient-to-r from-adiptify-navy to-[#1e2d45] hover:from-[#364a6b] hover:to-adiptify-navy text-white rounded-2xl py-4 font-extrabold text-[15px] transition-all shadow-[0_8px_25px_-8px_rgba(45,60,89,0.5)] active:scale-[0.98] disabled:opacity-75 disabled:cursor-not-allowed disabled:active:scale-100 flex items-center justify-center gap-2"
                                     >
-                                        <div className="absolute inset-0 w-full h-full bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                        <div className="absolute inset-0 w-full h-full bg-adiptify-gold/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
                                         {loading ? (
                                             <Loader2 size={20} className="animate-spin relative z-10" />
                                         ) : (
@@ -270,7 +270,7 @@ const Login = () => {
                     
                     {/* Tiny footer under form */}
                     <p className="text-center text-xs font-semibold text-slate-500 dark:text-slate-400 mt-8 drop-shadow-sm">
-                        By continuing, you agree to Adiptify's <a href="#" className="text-indigo-600 dark:text-indigo-400 hover:underline">Terms of Service</a> & <a href="#" className="text-indigo-600 dark:text-indigo-400 hover:underline">Privacy Policy</a>
+                        By continuing, you agree to Adiptify's <a href="#" className="text-adiptify-terracotta dark:text-adiptify-gold hover:underline">Terms of Service</a> & <a href="#" className="text-adiptify-terracotta dark:text-adiptify-gold hover:underline">Privacy Policy</a>
                     </p>
                 </motion.div>
 
@@ -281,7 +281,7 @@ const Login = () => {
                     transition={{ duration: 1, delay: 0.3, ease: "easeOut" }}
                     className="hidden lg:flex flex-col justify-center flex-1 h-[85vh] rounded-[3rem] p-12 relative overflow-hidden my-auto"
                 >
-                    <div className="absolute inset-0 bg-gradient-to-br from-indigo-600/10 via-transparent to-amber-500/10 backdrop-blur-3xl border border-white/30 dark:border-white/10 rounded-[4rem] shadow-2xl"></div>
+                    <div className="absolute inset-0 bg-gradient-to-br from-adiptify-navy/10 via-transparent to-adiptify-gold/10 backdrop-blur-3xl border border-white/30 dark:border-white/10 rounded-[4rem] shadow-2xl"></div>
                     
                     {/* Hero Content Elements */}
                     <div className="relative z-10 h-full flex flex-col items-center justify-center text-center">
@@ -290,15 +290,19 @@ const Login = () => {
                             transition={{ repeat: Infinity, duration: 8, ease: "easeInOut" }}
                             className="bg-white/80 dark:bg-slate-800/80 p-8 rounded-[2.5rem] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] dark:shadow-[0_20px_60px_-15px_rgba(0,0,0,0.5)] mb-12 border border-white/50 dark:border-slate-700/50 backdrop-blur-md relative"
                         >
-                            <div className="absolute -top-5 -right-5 bg-gradient-to-br from-amber-300 to-amber-500 text-amber-900 p-3 rounded-2xl rotate-12 shadow-xl border border-white/30">
+                            <div className="absolute -top-5 -right-5 bg-gradient-to-br from-adiptify-gold to-adiptify-terracotta text-white p-3 rounded-2xl rotate-12 shadow-xl border border-white/30">
                                 <Sparkles size={24} strokeWidth={2.5} />
                             </div>
-                            <GraduationCap size={90} strokeWidth={1.5} className="text-indigo-600 dark:text-indigo-400" />
+                            <img
+                                src={resolvedTheme === 'dark' ? '/logos/logo-dark-premium.png' : '/logos/logo-dark-gold.png'}
+                                alt="Adiptify"
+                                className="h-24 w-auto object-contain"
+                            />
                         </motion.div>
 
                         <h2 className="text-5xl xl:text-6xl font-extrabold text-slate-800 dark:text-white leading-[1.1] mb-8 tracking-tight">
                             Master any subject with <br/>
-                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-500 dark:from-indigo-400 dark:to-purple-400">Intelligent Adaptation</span>
+                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-adiptify-navy to-adiptify-terracotta dark:from-adiptify-gold dark:to-adiptify-terracotta">Intelligent Adaptation</span>
                         </h2>
                         
                         <p className="text-lg xl:text-xl text-slate-600 dark:text-slate-300 max-w-lg mb-14 leading-relaxed font-medium">
@@ -307,7 +311,7 @@ const Login = () => {
 
                         <div className="flex items-center gap-5 text-sm font-bold text-slate-600 dark:text-slate-300 bg-white/60 dark:bg-slate-800/60 py-3.5 px-8 rounded-full shadow-lg backdrop-blur-xl border border-white/50 dark:border-slate-700/50">
                             <span className="flex items-center gap-2.5">
-                                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.8)]"></span>
+                                <span className="w-2.5 h-2.5 rounded-full bg-adiptify-olive animate-pulse shadow-[0_0_10px_rgba(148,163,120,0.8)]"></span>
                                 AI Models Active
                             </span>
                             <span className="w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-600"></span>
@@ -319,12 +323,12 @@ const Login = () => {
                     <motion.div 
                         animate={{ rotate: 360 }}
                         transition={{ repeat: Infinity, duration: 50, ease: "linear" }}
-                        className="absolute -bottom-32 -left-32 w-[30rem] h-[30rem] border-2 border-indigo-500/10 dark:border-indigo-400/10 rounded-full border-dashed"
+                        className="absolute -bottom-32 -left-32 w-[30rem] h-[30rem] border-2 border-adiptify-navy/10 dark:border-adiptify-gold/10 rounded-full border-dashed"
                     />
                     <motion.div 
                         animate={{ rotate: -360 }}
                         transition={{ repeat: Infinity, duration: 70, ease: "linear" }}
-                        className="absolute -top-32 -right-32 w-[40rem] h-[40rem] border border-amber-500/10 dark:border-amber-400/10 rounded-full"
+                        className="absolute -top-32 -right-32 w-[40rem] h-[40rem] border border-adiptify-gold/10 dark:border-adiptify-terracotta/10 rounded-full"
                     />
                 </motion.div>
             </div>
@@ -333,4 +337,3 @@ const Login = () => {
 };
 
 export default Login;
-

@@ -3,6 +3,8 @@ import { useQuiz } from './QuizContext';
 import { ThemeProvider as MuiThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 
+const API_BASE = import.meta.env.VITE_API_BASE_URL || '';
+
 const ThemeContext = createContext();
 
 const STORAGE_KEY = 'adiptify_theme';
@@ -58,11 +60,11 @@ export const ThemeProvider = ({ children }) => {
 
         // If user is logged in, persist to backend
         if (user?.token) {
-            fetch('/api/user/preferences', {
+            fetch(`${API_BASE}/api/user/preferences`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${user.token}`,
+                    'Authorization': `Bearer ${user.token || localStorage.getItem('adiptify_token')}`,
                 },
                 body: JSON.stringify({ themePreference: newTheme }),
             }).catch(() => { /* silent fail — localStorage is the fallback */ });
@@ -72,8 +74,8 @@ export const ThemeProvider = ({ children }) => {
     // Load preference from backend when user logs in
     useEffect(() => {
         if (!user?.token) return;
-        fetch('/api/user/preferences', {
-            headers: { 'Authorization': `Bearer ${user.token}` },
+        fetch(`${API_BASE}/api/user/preferences`, {
+            headers: { 'Authorization': `Bearer ${user.token || localStorage.getItem('adiptify_token')}` },
         })
             .then(res => res.ok ? res.json() : null)
             .then(data => {
